@@ -5,23 +5,21 @@ set -ouex pipefail
 # Copy the contents of system_files/ of the git repo to /
 cp -avf "/ctx/system_files"/. /
 
-### Install packages
+dnf5 install -y nix nix-daemon
 
-# Packages can be installed from any enabled yum repo on the image.
-# RPMfusion repos are available by default in ublue main images
-# List of rpmfusion packages can be found here:
-# https://mirrors.rpmfusion.org/mirrorlist?path=free/fedora/updates/43/x86_64/repoview/index.html&protocol=https&redirect=1
+# `/` is immutable, therefore we need to bind mount `/nix` to `/var/nix`
+# so that the Nix daemon can write to it.
+mkdir -p /var/nix
 
-# this installs a package from fedora repos
-dnf5 install -y tmux
+semanage fcontext -a -t usr_t '/nix/store(/.*)?'
+semanage fcontext -a -t usr_t '/var/nix/store(/.*)?'
+semanage fcontext -a -t var_run_t '/nix/var/nix/daemon-socket(/.*)?'
+semanage fcontext -a -t var_run_t '/var/nix/var/nix/daemon-socket(/.*)?'
+semanage fcontext -a -t usr_t '/nix/var/nix/profiles(/.*)?'
+semanage fcontext -a -t usr_t '/var/nix/var/nix/profiles(/.*)?'
 
-# Use a COPR Example:
-#
-# dnf5 -y copr enable ublue-os/staging
-# dnf5 -y install package
-# Disable COPRs so they don't end up enabled on the final image:
-# dnf5 -y copr disable ublue-os/staging
+systemctl enable nix.mount nix-daemon.socket
 
-#### Example for enabling a System Unit File
-
-systemctl enable podman.socket
+# Do not carry package-manager runtime state into the bootable image.
+dnf5 clean all
+rm -rf /run/dnf /var/lib/dnf/repos

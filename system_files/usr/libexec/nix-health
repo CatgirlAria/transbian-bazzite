@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -euo pipefail
+
+test "$(findmnt -n -o TARGET /nix)" = /nix
+systemctl is-active --quiet nix.mount
+systemctl is-active --quiet nix-daemon.socket
+nix --version
+nix store info --store daemon >/dev/null
+
+echo "🏳️‍⚧️ Nix is healthy!"

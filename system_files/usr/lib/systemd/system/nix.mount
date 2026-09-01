@@ -1,0 +1,17 @@
+[Unit]
+Description=Nix Package Manager
+DefaultDependencies=no
+After=mkdir-rootfs@nix.service
+After=ostree-remount.service
+Requires=mkdir-rootfs@nix.service
+Before=nix-store-setup.service nix-daemon.service nix-daemon.socket
+ConditionPathIsDirectory=/var/nix
+
+[Mount]
+What=/var/nix
+Where=/nix
+Options=bind
+Type=none
+
+[Install]
+WantedBy=local-fs.target

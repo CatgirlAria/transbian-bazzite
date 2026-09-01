@@ -1,0 +1,11 @@
+[Unit]
+Description=Prepare the persistent Nix store
+Requires=nix.mount
+After=nix.mount
+Before=nix-daemon.service nix-daemon.socket
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/install -d -m 0755 /nix/store /nix/var/nix/profiles /nix/var/nix/daemon-socket
+ExecStart=/usr/sbin/restorecon -F /nix/store /nix/var/nix/profiles /nix/var/nix/daemon-socket
+RemainAfterExit=yes
